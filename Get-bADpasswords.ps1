@@ -11,8 +11,8 @@
 # ================ #
 
 # Domain information
-$domain_name = "YourDomainName"
-$naming_context = 'DC=domain,DC=com'
+$domain_name = "windcorp"
+$naming_context = 'DC=windcorp,DC=thm'
 
 # Directories
 $group_folder = '.\Accessible\AccountGroups'
@@ -27,7 +27,7 @@ $current_timestamp = Get-Date -Format ddMMyyyy-HHmmss
 # - changePassLogon = Ticks the "The user must change password on next logon"
 #
 #IMPORTANT: If resetPwd is enabled, the users password will be changed to a random password.
-#This password is logged in logfile. So remember to delete the logs.
+#That password are logged in logfile, so remember to delete the logs.
 
 $resetPwd = $false 
 $removeNoExpire = $false
@@ -41,15 +41,20 @@ $write_to_csv_file = $true
 $write_hash_to_logs = $false
 
 # Result email dispatch information
-$mail_authenticate = $false
-$mail_smtp = "mail-smtp.yourcompany.com"
+# Email username and password are collected by a prompt on first run and saved securely in the users %userprofile/%/Documents/Credentials folder, protected by Microsoft DPAPI.
+# The location can be changed by enabling and changing the variable: $cred_storepath
+# https://bitbucket.org/metisit/credentialmanager/src/master/
+# To re-set username and password, just delete the files named: bADpasswords.password and bADpasswords.username
+# If you are running this script scheduled from another account, you will find istructions how to create credential-files inside the module: CredentialManager.psm1   
+
+#$cred_storepath = "c:\Credentials\myname"
+$mail_authenticate = $true
+$mail_smtp = "mailserver"
 $mail_recipient = "Get-bADpassword <badpwd@yourcompany.com>"
 $mail_sender = "Get-bADpasswords <badpwd@yourcompany.com>"
-
-$mail_user = "badpwd@yourcompany.com"
 $mail_subject = "Get-bADpasswords $($domain_name.ToUpper()) $current_timestamp"
 $mail_port = 587
-$mail_password = ""
+$Enablessl = $true
 
 $send_log_file = $true
 $send_csv_file = $true
@@ -57,7 +62,12 @@ $send_csv_file = $true
 # ================ #
 # PREPROCESSING => #
 # ================ #
+Set-ExecutionPolicy Bypass
 Add-Type -AssemblyName 'System.Web'
+Import-Module ./CredentialManager.psm1
+
+$creds = Get-StoredCredential -Name bADpasswords -StorePath $cred_storepath 
+
 $current_directory = Split-Path $MyInvocation.MyCommand.Path
 [System.IO.Directory]::SetCurrentDirectory($current_directory) > $null
 
@@ -88,7 +98,7 @@ $empty_nt_hash = '31d6cfe0d16ae931b73c59d7e0c089c0'
                   
 # miscellaneous
 $script_name = 'Get-bADpasswords'
-$script_version = '3.01'
+$script_version = '3.03'
 
 # ================ #
 # FUNCTIONS =====> #
@@ -134,17 +144,14 @@ function New-RandomPassword {
     Add-Type -AssemblyName 'System.Web'
     $length = Get-Random -Minimum $MinimumPasswordLength -Maximum $MaximumPasswordLength
     $password = [System.Web.Security.Membership]::GeneratePassword($length,$NumberOfAlphaNumericCharacters)
-    if ($ConvertToSecureString.IsPresent) {
-        ConvertTo-SecureString -String $password -AsPlainText -Force
-    } else {
-        $password
-    }
+ 
 }
 
 
 # ================ #
 # SCRIPT ========> #
 # ================ #
+
 
 clear
 
@@ -418,9 +425,10 @@ $Message.IsBodyHTML = $true
 $Message.Subject = $mail_subject
 $Message.Body = $mail_body
 $Smtp = New-Object Net.Mail.SmtpClient($mail_smtp,$mail_port)
-$Smtp.EnableSsl = $true
+$Smtp.EnableSsl = $Enablessl
 if ($mail_authenticate){
-$Smtp.Credentials = New-Object System.Net.NetworkCredential($mail_user ,$mail_password)
+
+    $Smtp.Credentials = $creds
 } 
 $Smtp.Send($Message)
 
