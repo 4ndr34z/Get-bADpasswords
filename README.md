@@ -19,10 +19,10 @@ The following additions are done in this fork
   * Resetpassword - Resets the users password to a random strong password
   * Untick "Password never expires" in user properties
   * Ticks "User must change password at next logon"
-* Addedd optional settings for SMTP
-  * Added authentication options
-  * Added portnumber
-  * Added SSL-option
+* Added optional settings for SMTP
+  * Authentication options
+  * SMTP portnumber
+  * Enable SSL
   * SMTP credentials are stored encrypted
 * Added a Norwegian wordlist
 
