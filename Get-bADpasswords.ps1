@@ -21,6 +21,18 @@ $password_folder = '.\Accessible\PasswordLists'
 # Logging
 $current_timestamp = Get-Date -Format ddMMyyyy-HHmmss
 
+#Actions if password is weak
+# - resetPWd = Resets the users password to a random password
+# - removeNoExpire = Unticks "Password never expires"
+# - changePassLogon = Ticks the "The user must change password on next logon"
+#
+#IMPORTANT: If resetPwd is enabled, the users password will be changed to a random password.
+#This password is logged in logfile. So remember to delete the logs.
+
+$resetPwd = $false 
+$removeNoExpire = $false
+$changePassLogon = $false
+
 $log_filename  = ".\Accessible\Logs\log_$domain_name-$current_timestamp.txt"
 $csv_filename  = ".\Accessible\CSVs\exported_$domain_name-$current_timestamp.csv"
 
@@ -29,10 +41,15 @@ $write_to_csv_file = $true
 $write_hash_to_logs = $false
 
 # Result email dispatch information
+$mail_authenticate = $false
 $mail_smtp = "mail-smtp.yourcompany.com"
 $mail_recipient = "Get-bADpassword <badpwd@yourcompany.com>"
 $mail_sender = "Get-bADpasswords <badpwd@yourcompany.com>"
+
+$mail_user = "badpwd@yourcompany.com"
 $mail_subject = "Get-bADpasswords $($domain_name.ToUpper()) $current_timestamp"
+$mail_port = 587
+$mail_password = ""
 
 $send_log_file = $true
 $send_csv_file = $true
@@ -40,7 +57,7 @@ $send_csv_file = $true
 # ================ #
 # PREPROCESSING => #
 # ================ #
-
+Add-Type -AssemblyName 'System.Web'
 $current_directory = Split-Path $MyInvocation.MyCommand.Path
 [System.IO.Directory]::SetCurrentDirectory($current_directory) > $null
 
@@ -71,7 +88,7 @@ $empty_nt_hash = '31d6cfe0d16ae931b73c59d7e0c089c0'
                   
 # miscellaneous
 $script_name = 'Get-bADpasswords'
-$script_version = '3.00'
+$script_version = '3.01'
 
 # ================ #
 # FUNCTIONS =====> #
@@ -97,6 +114,33 @@ function Get-AliveDomainController {
         }
     }
 }
+
+
+
+
+
+function New-RandomPassword {
+    param(
+        [Parameter()]
+        [int]$MinimumPasswordLength = 8,
+        [Parameter()]
+        [int]$MaximumPasswordLength = 30,
+        [Parameter()]
+        [int]$NumberOfAlphaNumericCharacters = 5,
+        [Parameter()]
+        [switch]$ConvertToSecureString
+    )
+    
+    Add-Type -AssemblyName 'System.Web'
+    $length = Get-Random -Minimum $MinimumPasswordLength -Maximum $MaximumPasswordLength
+    $password = [System.Web.Security.Membership]::GeneratePassword($length,$NumberOfAlphaNumericCharacters)
+    if ($ConvertToSecureString.IsPresent) {
+        ConvertTo-SecureString -String $password -AsPlainText -Force
+    } else {
+        $password
+    }
+}
+
 
 # ================ #
 # SCRIPT ========> #
@@ -218,10 +262,24 @@ if (($users_with_empty_password -ne $null) -and ($users_with_empty_password.Coun
 if (($user_matches -ne $null) -and ($user_matches.Count -gt 0)) {
 	Log-Automatic -string "Found $($user_matches.Count) user(s) with weak passwords." -type 'info' -timestamp
 
+    # =========== Actions if password is weak
     foreach ($user in $user_matches) {
         $files = "'$((Get-Item -Path $user.PasswordFiles).BaseName -join ""','"")'"
+        $newpass = New-RandomPassword -MinimumPasswordLength 15 -MaximumPasswordLength 16 -NumberOfAlphaNumericCharacters 13
 	    Log-Automatic -string "Matched password found for user '$($user.SamAccountName)' in list(s) $files." -type 'info' -timestamp
+        if ($resetPwd){
+            net user /domain $($user.SamAccountName) $newpass
+            Log-Automatic -string "'$($user.SamAccountName)':$newpass" -type 'info' -timestamp
+        }
 
+        if ($removeNoExpire){
+            Set-ADUser -Identity $($user.SamAccountName) -PasswordNeverExpires:$FALSE
+        }
+
+        if ($changePassLogon){
+            Set-Aduser -Identity $($user.SamAccountName) -ChangePasswordAtLogon $true
+        }
+        
 	    if ($write_to_csv_file) {
             if ($write_hash_to_logs) {
 		        Log-Specific -filename $csv_filename -string "$($user.Activity);weak;$($user.PrivilegeType);$($user.SamAccountName);$($user.SID);$($user.NtHash);$files"
@@ -344,15 +402,28 @@ if (($shared_passwords -ne $null) -and ($shared_passwords.Count -gt 0)) {
     }
 }
 
-$attachments = @()
+
+# Send mail
+$Message = New-Object System.Net.Mail.MailMessage $mail_sender,$mail_recipient
 
 if ($send_log_file) {
-    $attachments += $log_filename
-}
+    $Message.Attachments.Add($log_filename)
+   }
 
 if ($send_csv_file) {
-    $attachments += $csv_filename
+    $Message.Attachments.Add($csv_filename)
 }
 
-Send-MailMessage -From $mail_sender -To $mail_recipient -Subject $mail_subject -Body $mail_body -SmtpServer $mail_smtp -Attachments $attachments
+$Message.IsBodyHTML = $true
+$Message.Subject = $mail_subject
+$Message.Body = $mail_body
+$Smtp = New-Object Net.Mail.SmtpClient($mail_smtp,$mail_port)
+$Smtp.EnableSsl = $true
+if ($mail_authenticate){
+$Smtp.Credentials = New-Object System.Net.NetworkCredential($mail_user ,$mail_password)
+} 
+$Smtp.Send($Message)
+
+
+
 exit
