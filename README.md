@@ -93,7 +93,7 @@ PS> ./Get-bADpassword.ps1
 * [**Jakob H. Heidelberg**](https://github.com/ZilentJack) - *Initial work* - 
 * [**Valdemar Carøe**](https://github.com/st4ckh0und) - *Script improvement & PSI-module development* - 
 * **Nichlas Falk** - *Script improvement* - 
-* **Andreas Finstad** - Improved SMTP-support and useractions
+* **Andreas Finstad** - Improved SMTP-support and added useraccount actions
 
 
 ## License
