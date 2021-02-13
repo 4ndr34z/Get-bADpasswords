@@ -15,18 +15,18 @@ This module is able to compare password hashes of enabled Active Directory users
 
 ## Additions in this fork
 The following additions are done in this fork
-* Added optional actions when weak passwords are detected, so you can mitigate the problem right away
-  * Resetpassword - Resets the users password to a random strong password
+* Added optional actions for when weak passwords are detected, so you can mitigate the problem right away
+  * Reset password - Resets the users password to a random strong password
   * Untick "Password never expires" in user properties
   * Ticks "User must change password at next logon"
-* Added optional settings for SMTP
-  * Authentication options
+* Added extended SMTP functions
+  * Authentication 
   * SMTP portnumber
   * Enable SSL
   * SMTP credentials are stored encrypted
 * Added a Norwegian wordlist
 
-![picture](https://github.com/improsec/Get-bADpasswords/blob/master/Get-bADpasswords_2.jpg)
+![picture](https://github.com/4ndr34z/Get-bADpasswords/blob/master/Image.png)
 
 ## Dependencies
 
@@ -93,6 +93,8 @@ PS> ./Get-bADpassword.ps1
 * [**Jakob H. Heidelberg**](https://github.com/ZilentJack) - *Initial work* - 
 * [**Valdemar Carøe**](https://github.com/st4ckh0und) - *Script improvement & PSI-module development* - 
 * **Nichlas Falk** - *Script improvement* - 
+* **Andreas Finstad** - Improved SMTP-support and useractions
+
 
 ## License
 
