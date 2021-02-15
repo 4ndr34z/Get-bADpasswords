@@ -51,6 +51,9 @@ Microsoft .NET Framework 4.5.1+ is required by the DSInternals 3.0 PowerShell mo
 ## Prerequisites
 
 ### Active Directory module: RSAT-AD-PowerShell
+This module is needed to set user options in AD. 
+"Password must be changed at next login" and unticking of "Password never expires"
+
 ```
 Import-Module ServerManager
 Add-WindowsFeature -Name "RSAT-AD-PowerShell" –IncludeAllSubFeature
