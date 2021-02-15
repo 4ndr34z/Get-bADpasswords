@@ -50,8 +50,17 @@ Microsoft .NET Framework 4.5.1+ is required by the DSInternals 3.0 PowerShell mo
 
 ## Prerequisites
 
+### Active Directory module: RSAT-AD-PowerShell
+```
+Import-Module ServerManager
+Add-WindowsFeature -Name "RSAT-AD-PowerShell" –IncludeAllSubFeature
+```
+
+
 ### DSInternals 3.0 PowerShell Module
 This module is used to query the Active Directory and fetch user information (SAM Account Name, E-mail, Password Hash, etc.). The source code for this module can be found [here](https://github.com/MichaelGrafnetter/DSInternals).
+
+
 
 ##### Installation step-by-step
 * Go to [DSInternals 3.0 PowerShell Module Download](https://www.powershellgallery.com/packages/DSInternals/3.0).
@@ -62,6 +71,7 @@ Alternatively, you can install DSInternals 3.0 through PowerShellGet by running 
 ```powershell
 PS> Install-Module -Name DSInternals -Scope AllUsers
 ```
+
 
 ### Leaked password list
 This file contains a binary packed list of leaked password hashes from the PwnedPasswords list published by Troy Hunt. The file is too big (9.5 GB) for GitHub (max 25 MB), so we host it on our SharePoint instead. 
