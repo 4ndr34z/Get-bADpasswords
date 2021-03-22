@@ -66,7 +66,7 @@ Set-ExecutionPolicy Bypass
 Add-Type -AssemblyName 'System.Web'
 Import-Module ./CredentialManager.psm1
 
-$creds = Get-StoredCredential -Name bADpasswords -StorePath $cred_storepath 
+$creds = Get-StoredCredential -Name "e-mail creds" -StorePath $cred_storepath 
 
 $current_directory = Split-Path $MyInvocation.MyCommand.Path
 [System.IO.Directory]::SetCurrentDirectory($current_directory) > $null
