@@ -9,7 +9,8 @@
 $years = (0..9 | foreach{ $_ }) + 00..99 | foreach { $_.ToString("00") }) + (1950..2021 | foreach { $_.ToString() })
 $permutations = @("", ".", "!", "?", "=", ".!", "..", "!!", "!.", "?.", ".=")
 
-$strings = @('company name')
+
+$strings= @(Get-Content .\custom.txt)
 
 # =========================
 # PERFORM GENERATION
