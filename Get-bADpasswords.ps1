@@ -1,4 +1,4 @@
-# A few helper functions
+ # A few helper functions
 #
 # Find us here:
 # - https://www.improsec.com
@@ -12,7 +12,7 @@
 
 # Domain information
 $domain_name = "windcorp"
-$naming_context = 'DC=windcorp,DC=thm'
+$naming_context = 'DC=windcorp,DC=local'
 
 # Directories
 $group_folder = '.\Accessible\AccountGroups'
@@ -30,8 +30,8 @@ $current_timestamp = Get-Date -Format ddMMyyyy-HHmmss
 #That password are logged in logfile, so remember to delete the logs.
 
 $resetPwd = $false 
-$removeNoExpire = $false
-$changePassLogon = $false
+$removeNoExpire = $true
+$changePassLogon = $true
 
 $log_filename  = ".\Accessible\Logs\log_$domain_name-$current_timestamp.txt"
 $csv_filename  = ".\Accessible\CSVs\exported_$domain_name-$current_timestamp.csv"
@@ -49,12 +49,12 @@ $write_hash_to_logs = $false
 
 #$cred_storepath = "c:\Credentials\myname"
 $mail_authenticate = $true
-$mail_smtp = "mailserver"
-$mail_recipient = "Get-bADpassword <badpwd@yourcompany.com>"
-$mail_sender = "Get-bADpasswords <badpwd@yourcompany.com>"
+$mail_smtp = "miab.windcorp.local"
+$mail_recipient = "Get-bADpassword <admin@windcorp.local>"
+$mail_sender = "Get-bADpasswords <badadpa@nwindcorp.local>"
 $mail_subject = "Get-bADpasswords $($domain_name.ToUpper()) $current_timestamp"
-$mail_port = 587
-$Enablessl = $true
+$mail_port = 25#587
+$Enablessl = $false
 
 $send_log_file = $true
 $send_csv_file = $true
@@ -62,11 +62,11 @@ $send_csv_file = $true
 # ================ #
 # PREPROCESSING => #
 # ================ #
-Set-ExecutionPolicy Bypass
-Add-Type -AssemblyName 'System.Web'
+Set-ExecutionPolicy bypass -Scope CurrentUser
+Add-Type -AssemblyName System.Web
 Import-Module ./CredentialManager.psm1
 
-$creds = Get-StoredCredential -Name "e-mail creds" -StorePath $cred_storepath 
+$creds = Get-StoredCredential -Name bADpasswords -StorePath $cred_storepath 
 
 $current_directory = Split-Path $MyInvocation.MyCommand.Path
 [System.IO.Directory]::SetCurrentDirectory($current_directory) > $null
@@ -129,23 +129,7 @@ function Get-AliveDomainController {
 
 
 
-function New-RandomPassword {
-    param(
-        [Parameter()]
-        [int]$MinimumPasswordLength = 8,
-        [Parameter()]
-        [int]$MaximumPasswordLength = 30,
-        [Parameter()]
-        [int]$NumberOfAlphaNumericCharacters = 5,
-        [Parameter()]
-        [switch]$ConvertToSecureString
-    )
-    
-    Add-Type -AssemblyName 'System.Web'
-    $length = Get-Random -Minimum $MinimumPasswordLength -Maximum $MaximumPasswordLength
-    $password = [System.Web.Security.Membership]::GeneratePassword($length,$NumberOfAlphaNumericCharacters)
- 
-}
+
 
 
 # ================ #
@@ -272,7 +256,7 @@ if (($user_matches -ne $null) -and ($user_matches.Count -gt 0)) {
     # =========== Actions if password is weak
     foreach ($user in $user_matches) {
         $files = "'$((Get-Item -Path $user.PasswordFiles).BaseName -join ""','"")'"
-        $newpass = New-RandomPassword -MinimumPasswordLength 15 -MaximumPasswordLength 16 -NumberOfAlphaNumericCharacters 13
+        $newpass = [System.Web.Security.Membership]::GeneratePassword(15,1)
 	    Log-Automatic -string "Matched password found for user '$($user.SamAccountName)' in list(s) $files." -type 'info' -timestamp
         if ($resetPwd){
             net user /domain $($user.SamAccountName) $newpass
@@ -435,3 +419,4 @@ $Smtp.Send($Message)
 
 
 exit
+ 
