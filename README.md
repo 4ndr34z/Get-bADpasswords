@@ -25,6 +25,7 @@ The following additions are done in this fork
   * Enable SSL
   * SMTP credentials are stored encrypted
 * Added a Norwegian wordlist
+* Python-script for converting HIBP-hashes to binary
 
 ![picture](https://github.com/4ndr34z/Get-bADpasswords/blob/master/Image.png)
 
@@ -77,12 +78,13 @@ PS> Install-Module -Name DSInternals -Scope AllUsers
 
 
 ### Leaked password list
-This file contains a binary packed list of leaked password hashes from the PwnedPasswords list published by Troy Hunt. The file is too big (9.5 GB) for GitHub (max 25 MB), so we host it on our SharePoint instead. 
+Must be collected from Have I Been Pwned
 
 ##### Installation step-by-step
-* Go to [Improsec Leaked Password List](https://improsec-my.sharepoint.com/:u:/p/vca/Ef3PPO-QAPFClNzBa6cxhaMBPvZ4zqaPm7Ad0o3auKso_g).
-* Download the _leaked-passwords-v7.bin_ file:
-  * SHA1: `f1db968063e9a7f080f2f65252c6274dae8eb233`.
+* Download using [haveibeenpwned-downloader](https://github.com/HaveIBeenPwned/PwnedPasswordsDownloader) (remember -n for NTLM-hashes)
+  * ```haveibeenpwned-downloader pwnedpasswords -o -p 64 -n ```
+* Convert the downloaded file using the script convert.py
+  * ```python3 convert.py to-bin pwnedpasswords.txt pwnedntlm.bin```
 * Place the file in the `./Accessible/PasswordLists/` folder.
 
 ## Installation
@@ -106,7 +108,7 @@ PS> ./Get-bADpassword.ps1
 * [**Jakob H. Heidelberg**](https://github.com/ZilentJack) - *Initial work* - 
 * [**Valdemar Carøe**](https://github.com/st4ckh0und) - *Script improvement & PSI-module development* - 
 * **Nichlas Falk** - *Script improvement* - 
-* **Andreas Finstad** - Improved SMTP-support and added useraccount actions
+* **Andreas Finstad** - Improved SMTP-support, added useraccount actions, added Python convert-script
 
 
 ## License
