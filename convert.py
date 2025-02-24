@@ -14,8 +14,8 @@ def hex_to_little_endian(hex_value):
 
 def count_lines(filename):
     with open(filename, 'r') as file:
-        lines = file.readlines()
-    return len(lines)
+        count = sum(1 for _ in file)
+    return count
 
 def convert_binary_to_hashes(input_file, output_file):
     print("converting to hashes textfile...")
